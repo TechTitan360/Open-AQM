@@ -131,7 +131,7 @@
 Before you begin, ensure you have the following installed:
 
 - **Node.js**: Version 18.x or higher ([Download](https://nodejs.org/))
-- **npm**: Version 9.x or higher (comes with Node.js)
+- **npm**: Version 8.x or higher (comes with Node.js)
   - *Alternative*: pnpm 8.x or higher
 - **Git**: For version control ([Download](https://git-scm.com/))
 
@@ -501,7 +501,7 @@ npm test -- --coverage
 
 ### Reporting Security Issues
 
-If you discover a security vulnerability, please email **security@open-aqm.org** (or create a private security advisory on GitHub). Do not open public issues for security concerns.
+If you discover a security vulnerability, please create a private security advisory on GitHub or report it via the repository's security tab. Do not open public issues for security concerns.
 
 ### Best Practices
 
@@ -515,7 +515,7 @@ If you discover a security vulnerability, please email **security@open-aqm.org**
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License**.
 
 ```
 MIT License
