@@ -12,6 +12,7 @@ import {
   increment,
   arrayUnion,
   arrayRemove,
+  limit,
 } from "firebase/firestore"
 import { db } from "./firebase"
 import type { Post } from "@/lib/types"
@@ -19,12 +20,21 @@ import type { Post } from "@/lib/types"
 // Collection reference
 const postsCollection = collection(db, "posts")
 
+// Maximum number of posts to fetch for client-side search
+const SEARCH_LIMIT = 100
+
 // Get all posts with optional category filter
 export async function getPosts(category?: string, search?: string): Promise<Post[]> {
   let q = query(postsCollection, orderBy("createdAt", "desc"))
 
   if (category) {
     q = query(postsCollection, where("category", "==", category), orderBy("createdAt", "desc"))
+  }
+
+  // When search is provided, limit the fetch to prevent loading unnecessary data
+  // Client-side search is necessary since Firestore doesn't support full-text search
+  if (search) {
+    q = query(q, limit(SEARCH_LIMIT))
   }
 
   const snapshot = await getDocs(q)

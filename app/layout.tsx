@@ -1,10 +1,7 @@
-import { Inter } from 'next/font/google'
 import { ThemeProvider } from "@/components/theme-provider"
 import { SidebarProvider } from "@/components/sidebar-provider" // Make sure this path is correct
 import { MainSidebar } from "@/components/main-sidebar" // Make sure this path is correct
 import { AuthProvider } from "@/lib/firebase/auth-context"
-
-const inter = Inter({ subsets: ['latin'] })
 
 export default function RootLayout({
   children,
@@ -13,7 +10,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className="font-sans">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <SidebarProvider>

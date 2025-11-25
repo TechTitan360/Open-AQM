@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -17,41 +17,81 @@ import {
   YAxis,
 } from "@/components/ui/chart"
 import { Sparkles } from "lucide-react"
+import type { TooltipProps } from "recharts"
+
+// Static data moved outside component to prevent recreation on each render
+const predictionData = {
+  "24h": [
+    { time: "Now", aqi: 42 },
+    { time: "+4h", aqi: 48 },
+    { time: "+8h", aqi: 55 },
+    { time: "+12h", aqi: 62 },
+    { time: "+16h", aqi: 58 },
+    { time: "+20h", aqi: 50 },
+    { time: "+24h", aqi: 45 },
+  ],
+  "7d": [
+    { time: "Today", aqi: 42 },
+    { time: "Day 2", aqi: 45 },
+    { time: "Day 3", aqi: 52 },
+    { time: "Day 4", aqi: 58 },
+    { time: "Day 5", aqi: 60 },
+    { time: "Day 6", aqi: 55 },
+    { time: "Day 7", aqi: 48 },
+  ],
+} as const
+
+const factorsData = [
+  { name: "Traffic", value: 35 },
+  { name: "Industry", value: 25 },
+  { name: "Weather", value: 20 },
+  { name: "Construction", value: 15 },
+  { name: "Other", value: 5 },
+]
+
+// Memoized tooltip components to prevent recreation on each render
+const AqiTooltip = memo(function AqiTooltip({ active, payload }: TooltipProps<number, string>) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="font-medium">Time:</div>
+          <div>{data.time}</div>
+          <div className="font-medium">AQI:</div>
+          <div>{data.aqi}</div>
+        </div>
+      </div>
+    )
+  }
+  return null
+})
+
+const FactorsTooltip = memo(function FactorsTooltip({ active, payload }: TooltipProps<number, string>) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="font-medium">Factor:</div>
+          <div>{data.name}</div>
+          <div className="font-medium">Impact:</div>
+          <div>{data.value}%</div>
+        </div>
+      </div>
+    )
+  }
+  return null
+})
 
 export function AqiPrediction() {
   const [location, setLocation] = useState("downtown")
-  const [timeframe, setTimeframe] = useState("24h")
+  const [timeframe, setTimeframe] = useState<"24h" | "7d">("24h")
 
-  // Sample prediction data
-  const predictionData = {
-    "24h": [
-      { time: "Now", aqi: 42 },
-      { time: "+4h", aqi: 48 },
-      { time: "+8h", aqi: 55 },
-      { time: "+12h", aqi: 62 },
-      { time: "+16h", aqi: 58 },
-      { time: "+20h", aqi: 50 },
-      { time: "+24h", aqi: 45 },
-    ],
-    "7d": [
-      { time: "Today", aqi: 42 },
-      { time: "Day 2", aqi: 45 },
-      { time: "Day 3", aqi: 52 },
-      { time: "Day 4", aqi: 58 },
-      { time: "Day 5", aqi: 60 },
-      { time: "Day 6", aqi: 55 },
-      { time: "Day 7", aqi: 48 },
-    ],
-  }
-
-  // Sample contributing factors data
-  const factorsData = [
-    { name: "Traffic", value: 35 },
-    { name: "Industry", value: 25 },
-    { name: "Weather", value: 20 },
-    { name: "Construction", value: 15 },
-    { name: "Other", value: 5 },
-  ]
+  // Memoize formatted location name to prevent recalculation on each render
+  const formattedLocation = useMemo(() => {
+    return location.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
+  }, [location])
 
   return (
     <div className="grid gap-6">
@@ -108,7 +148,7 @@ export function AqiPrediction() {
             <CardTitle>AQI Prediction</CardTitle>
             <CardDescription>
               {timeframe === "24h" ? "Next 24 hours" : "Next 7 days"} prediction for{" "}
-              {location.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
+              {formattedLocation}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -124,24 +164,7 @@ export function AqiPrediction() {
                   <XAxis dataKey="time" />
                   <YAxis domain={[0, "dataMax + 20"]} />
                   <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="rounded-lg border bg-background p-2 shadow-sm">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="font-medium">Time:</div>
-                              <div>{data.time}</div>
-                              <div className="font-medium">AQI:</div>
-                              <div>{data.aqi}</div>
-                            </div>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                  <Tooltip content={AqiTooltip} />
                   <Area type="monotone" dataKey="aqi" stroke="#4f46e5" fillOpacity={1} fill="url(#colorAqi)" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -161,24 +184,7 @@ export function AqiPrediction() {
                   <XAxis type="number" domain={[0, 100]} />
                   <YAxis type="category" dataKey="name" width={80} />
                   <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="rounded-lg border bg-background p-2 shadow-sm">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="font-medium">Factor:</div>
-                              <div>{data.name}</div>
-                              <div className="font-medium">Impact:</div>
-                              <div>{data.value}%</div>
-                            </div>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                  <Tooltip content={FactorsTooltip} />
                   <Bar dataKey="value" fill="#4f46e5" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
