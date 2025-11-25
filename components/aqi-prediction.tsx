@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -17,6 +17,7 @@ import {
   YAxis,
 } from "@/components/ui/chart"
 import { Sparkles } from "lucide-react"
+import type { TooltipProps } from "recharts"
 
 // Static data moved outside component to prevent recreation on each render
 const predictionData = {
@@ -47,6 +48,41 @@ const factorsData = [
   { name: "Construction", value: 15 },
   { name: "Other", value: 5 },
 ]
+
+// Memoized tooltip components to prevent recreation on each render
+const AqiTooltip = memo(function AqiTooltip({ active, payload }: TooltipProps<number, string>) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="font-medium">Time:</div>
+          <div>{data.time}</div>
+          <div className="font-medium">AQI:</div>
+          <div>{data.aqi}</div>
+        </div>
+      </div>
+    )
+  }
+  return null
+})
+
+const FactorsTooltip = memo(function FactorsTooltip({ active, payload }: TooltipProps<number, string>) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="font-medium">Factor:</div>
+          <div>{data.name}</div>
+          <div className="font-medium">Impact:</div>
+          <div>{data.value}%</div>
+        </div>
+      </div>
+    )
+  }
+  return null
+})
 
 export function AqiPrediction() {
   const [location, setLocation] = useState("downtown")
@@ -128,24 +164,7 @@ export function AqiPrediction() {
                   <XAxis dataKey="time" />
                   <YAxis domain={[0, "dataMax + 20"]} />
                   <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="rounded-lg border bg-background p-2 shadow-sm">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="font-medium">Time:</div>
-                              <div>{data.time}</div>
-                              <div className="font-medium">AQI:</div>
-                              <div>{data.aqi}</div>
-                            </div>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                  <Tooltip content={AqiTooltip} />
                   <Area type="monotone" dataKey="aqi" stroke="#4f46e5" fillOpacity={1} fill="url(#colorAqi)" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -165,24 +184,7 @@ export function AqiPrediction() {
                   <XAxis type="number" domain={[0, 100]} />
                   <YAxis type="category" dataKey="name" width={80} />
                   <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload
-                        return (
-                          <div className="rounded-lg border bg-background p-2 shadow-sm">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="font-medium">Factor:</div>
-                              <div>{data.name}</div>
-                              <div className="font-medium">Impact:</div>
-                              <div>{data.value}%</div>
-                            </div>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                  <Tooltip content={FactorsTooltip} />
                   <Bar dataKey="value" fill="#4f46e5" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>

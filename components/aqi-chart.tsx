@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useCallback } from "react"
+import { memo } from "react"
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "@/components/ui/chart"
 import type { TooltipProps } from "recharts"
 
@@ -51,7 +51,7 @@ export function AqiChart() {
             tickFormatter={(value) => `${value}`}
             domain={[0, "dataMax + 20"]}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={CustomTooltip} />
           <Line
             type="monotone"
             dataKey="aqi"
