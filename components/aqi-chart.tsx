@@ -1,6 +1,8 @@
 "use client"
 
+import { memo, useCallback } from "react"
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "@/components/ui/chart"
+import type { TooltipProps } from "recharts"
 
 const data = [
   { time: "00:00", aqi: 35 },
@@ -17,6 +19,24 @@ const data = [
   { time: "22:00", aqi: 38 },
 ]
 
+// Memoized custom tooltip component to prevent recreation on each render
+const CustomTooltip = memo(function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="font-medium">Time:</div>
+          <div>{data.time}</div>
+          <div className="font-medium">AQI:</div>
+          <div>{data.aqi}</div>
+        </div>
+      </div>
+    )
+  }
+  return null
+})
+
 export function AqiChart() {
   return (
     <div className="h-[300px] w-full">
@@ -31,24 +51,7 @@ export function AqiChart() {
             tickFormatter={(value) => `${value}`}
             domain={[0, "dataMax + 20"]}
           />
-          <Tooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const data = payload[0].payload
-                return (
-                  <div className="rounded-lg border bg-background p-2 shadow-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="font-medium">Time:</div>
-                      <div>{data.time}</div>
-                      <div className="font-medium">AQI:</div>
-                      <div>{data.aqi}</div>
-                    </div>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Line
             type="monotone"
             dataKey="aqi"

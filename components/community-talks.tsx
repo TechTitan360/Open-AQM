@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MessageSquare, PenSquare, ThumbsUp } from "lucide-react"
 
+// Move static data outside the component to prevent recreation on each render
 const posts = [
   {
     id: 1,
@@ -57,6 +58,12 @@ const posts = [
 export function CommunityTalks() {
   const [activeTab, setActiveTab] = useState("all")
 
+  // Memoize filtered posts to avoid recalculating on every render
+  const filteredPosts = useMemo(() => {
+    if (activeTab === "all") return posts
+    return posts.filter((post) => post.tags.includes(activeTab))
+  }, [activeTab])
+
   return (
     <div className="grid gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -80,53 +87,51 @@ export function CommunityTalks() {
 
         <TabsContent value={activeTab} className="mt-6">
           <div className="grid gap-6">
-            {posts
-              .filter((post) => activeTab === "all" || post.tags.includes(activeTab))
-              .map((post) => (
-                <Card key={post.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-xl">{post.title}</CardTitle>
-                        <CardDescription className="mt-1 flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src="/placeholder.svg" alt={post.author.name} />
-                            <AvatarFallback>{post.author.avatar}</AvatarFallback>
-                          </Avatar>
-                          <span>{post.author.name}</span>
-                          <span>•</span>
-                          <span>{post.date}</span>
-                        </CardDescription>
-                      </div>
+            {filteredPosts.map((post) => (
+              <Card key={post.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-xl">{post.title}</CardTitle>
+                      <CardDescription className="mt-1 flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src="/placeholder.svg" alt={post.author.name} />
+                          <AvatarFallback>{post.author.avatar}</AvatarFallback>
+                        </Avatar>
+                        <span>{post.author.name}</span>
+                        <span>•</span>
+                        <span>{post.date}</span>
+                      </CardDescription>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{post.content}</p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {post.tags.map((tag) => (
-                        <Badge key={tag} variant="outline">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex items-center justify-between border-t p-4">
-                    <div className="flex gap-4">
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <ThumbsUp className="h-4 w-4" />
-                        <span>{post.likes}</span>
-                      </Button>
-                      <Button variant="ghost" size="sm" className="gap-1">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{post.comments}</span>
-                      </Button>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      Read More
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">{post.content}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                      <Badge key={tag} variant="outline">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex items-center justify-between border-t p-4">
+                  <div className="flex gap-4">
+                    <Button variant="ghost" size="sm" className="gap-1">
+                      <ThumbsUp className="h-4 w-4" />
+                      <span>{post.likes}</span>
                     </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    <Button variant="ghost" size="sm" className="gap-1">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>{post.comments}</span>
+                    </Button>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    Read More
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
         </TabsContent>
       </Tabs>

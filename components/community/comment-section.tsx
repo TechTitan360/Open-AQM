@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/lib/firebase/auth-context"
-import { getComments, addComment, subscribeToComments } from "@/lib/firebase/comments"
+import { addComment, subscribeToComments } from "@/lib/firebase/comments"
 import type { Comment } from "@/lib/types"
 import { CommentForm } from "@/components/community/comment-form"
 import { CommentItem } from "@/components/community/comment-item"
@@ -15,24 +15,17 @@ export function CommentSection({ postId }: { postId: string }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const loadComments = async () => {
-      setIsLoading(true)
-      const fetchedComments = await getComments(postId)
-      setComments(fetchedComments)
-      setIsLoading(false)
-    }
-
-    loadComments()
-
-    // Subscribe to real-time updates
+    // Subscribe to real-time updates - this will also provide initial data
+    // No need for a separate getComments() call as onSnapshot fires immediately
     const unsubscribe = subscribeToComments(postId, (updatedComments) => {
       setComments(updatedComments)
+      setIsLoading(false)
     })
 
     return () => unsubscribe()
   }, [postId])
 
-  const handleAddComment = async (content: string) => {
+  const handleAddComment = useCallback(async (content: string) => {
     if (!user) return
 
     await addComment(postId, {
@@ -44,7 +37,7 @@ export function CommentSection({ postId }: { postId: string }) {
       },
       createdAt: new Date().toISOString(),
     })
-  }
+  }, [user, postId])
 
   return (
     <div className="mt-8">
